@@ -233,7 +233,7 @@ def find_build_tools():
 
 def sdk_tool(name):
     bt = find_build_tools()
-    for ext in (".exe", ".bat", ""):
+    for ext in (".exe", ""):
         if (bt / (name + ext)).exists():
             return str(bt / (name + ext))
     raise RuntimeError(f"Falta {name} en {bt}")
@@ -259,7 +259,7 @@ def ensure_apktool(log):
 def run(cmd, log):
     log("> " + " ".join(Path(c).name if i == 0 else c for i, c in enumerate(cmd)))
     p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                       errors="replace", shell=cmd[0].endswith(".bat"))
+                       errors="replace")
     for line in p.stdout.splitlines():
         log("  " + line)
     if p.returncode != 0:
@@ -499,7 +499,8 @@ def build(src, log):
         run([keytool, "-genkeypair", "-keystore", str(ks), "-storepass", "android", "-keypass", "android",
              "-alias", "androiddebugkey", "-keyalg", "RSA", "-keysize", "2048", "-validity", "10000",
              "-dname", "CN=Android Debug,O=Android,C=US"], log)
-    run([sdk_tool("apksigner"), "sign", "--ks", str(ks), "--ks-pass", "pass:android",
+    # el .jar directo: apksigner.bat pasa por cmd (rompe rutas con "&") y no encuentra el Java de Android Studio
+    run([java, "-jar", str(find_build_tools() / "lib" / "apksigner.jar"), "sign", "--ks", str(ks), "--ks-pass", "pass:android",
          "--out", str(out), str(aligned)], log)
     for f in (unsigned, aligned, Path(str(out) + ".idsig")):
         f.unlink(missing_ok=True)
