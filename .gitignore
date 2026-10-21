@@ -13,3 +13,7 @@
 /captures
 .externalNativeBuild
 .cxx
+
+# apktool se descarga aparte (ver README, "Usar en PC")
+/tools/apktool.jar
+*-src/

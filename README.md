@@ -83,6 +83,43 @@ el código puedes usar la *decompilación completa*, editar el smali y recompila
 Las librerías `.so` compiladas para páginas de 4 KB solo se pueden arreglar recompilándolas desde su código
 fuente; en la mayoría de teléfonos (páginas de 4 KB) funcionan igual.
 
+## Usar en PC (Android Studio) — para lo que la app no puede
+
+Lo que el parche no arregla (crashes por código, edge-to-edge, librerías nativas) se corrige mejor en PC.
+`tools/android16.ps1` hace el mismo parche con herramientas de escritorio y te deja editar en medio.
+
+**Una vez:**
+1. Instala [Android Studio](https://developer.android.com/studio) (trae Java y el SDK con `zipalign`/`apksigner`).
+2. Descarga `apktool_X.Y.Z.jar` de [apktool.org](https://apktool.org) y guárdalo como `tools/apktool.jar`.
+3. Opcional: [jadx-gui](https://github.com/skylot/jadx/releases) para *leer* el código como Java.
+
+**Cada app** (PowerShell, en la carpeta `tools`):
+
+```powershell
+.\android16.ps1 -Apk C:\apks\juego.apk              # parche directo a API 36
+.\android16.ps1 -Apk C:\apks\juego.apk -Target 24   # el que menos cambia
+.\android16.ps1 -Apk C:\apks\juego.apk -Edit        # pausa para editar antes de recompilar
+adb install C:\apks\juego_api36.apk
+```
+
+Si Windows bloquea el script, ejecútalo como `powershell -ExecutionPolicy Bypass -File .\android16.ps1 -Apk …`.
+
+Con `-Edit` el script decompila a `juego-src\` y espera. Ábrela en Android Studio (*File → Open*) y edita
+`smali\`, `res\` o `AndroidManifest.xml`; luego presiona Enter y la recompila, alinea a 16 KB y firma con tu
+`debug.keystore`. Si la app se cierra, mira el motivo en **Logcat** de Android Studio con el teléfono conectado.
+Para depurar paso a paso el smali: *File → Profile or Debug APK*.
+
+**Arreglos típicos con `-Edit`:**
+
+| Problema (Logcat) | Dónde | Arreglo |
+|---|---|---|
+| `Targeting S+ ... FLAG_IMMUTABLE` | smali que llama a `PendingIntent;->get…` | Justo antes de la llamada: `or-int/lit32 vN, vN, 0x4000000` (vN = registro de *flags*, añade FLAG_IMMUTABLE) |
+| `MissingForegroundServiceTypeException` | `AndroidManifest.xml` | `android:foregroundServiceType="dataSync"` (u otro) en el `<service>` y el permiso `FOREGROUND_SERVICE_DATA_SYNC` |
+| `One of RECEIVER_EXPORTED…` | smali de `registerReceiver` | Usar la variante con flags (`0x2` = EXPORTED, `0x4` = NOT_EXPORTED) o bajar a `-Target 33` |
+| Interfaz bajo las barras | `res\values\styles.xml` del tema | Con `-Target 35`: `<item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>` (en 36 ya no se puede excluir) |
+| Cámara/ubicación no funcionan (permisos nunca pedidos) | Ajustes del teléfono | Concederlos a mano en *Ajustes → Apps → Permisos* |
+| `.so` de 4 KB en teléfono con páginas de 16 KB | Código fuente de la librería | Recompilar con NDK r28+ (16 KB por defecto) o `-Wl,-z,max-page-size=16384`; sin código fuente no tiene arreglo |
+
 ## Descargar
 
 * **Última compilación:** pestaña [Actions](https://github.com/ZenithUzu/Android-SDK-/actions) → la ejecución
