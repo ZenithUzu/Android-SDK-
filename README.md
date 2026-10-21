@@ -1,10 +1,10 @@
-# Zenith APK Tool
+# aSDKupdate
 
 Programa de **PC** (Windows, Linux o macOS) con interfaz para **decompilar** un APK, **aplicar mejoras**
 (SDK para Android 16, FPS, pantalla ancha…), dejarlo **desempaquetado** para que edites lo que quieras, y
 **volver a armarlo** firmado y listo para instalar.
 
-Es un solo archivo de Python (`zenith_apk.py`). Usa [apktool](https://apktool.org) para desempaquetar y
+Es un solo archivo de Python (`asdkupdate.py`). Usa [apktool](https://apktool.org) para desempaquetar y
 armar, y las herramientas oficiales del Android SDK (`zipalign`, `apksigner`) para alinear y firmar.
 
 ## Requisitos (una vez)
@@ -13,11 +13,11 @@ armar, y las herramientas oficiales del Android SDK (`zipalign`, `apksigner`) pa
 2. [Android Studio](https://developer.android.com/studio): trae Java y el Android SDK. Ábrelo una vez para
    que descargue el SDK.
 3. apktool se descarga solo la primera vez. Si falla, baja el `.jar` de [apktool.org](https://apktool.org) y
-   guárdalo como `apktool.jar` junto a `zenith_apk.py`.
+   guárdalo como `apktool.jar` junto a `asdkupdate.py`.
 
 ## Uso con interfaz
 
-Doble clic en **`Zenith APK Tool.bat`** (o `python zenith_apk.py`).
+Doble clic en **`aSDKupdate.bat`** (o `python asdkupdate.py`).
 
 1. **Elegir…** el APK.
 2. Elige el **SDK objetivo** y marca las **mejoras**.
@@ -34,9 +34,9 @@ Doble clic en **`Zenith APK Tool.bat`** (o `python zenith_apk.py`).
 ## Uso por consola
 
 ```bat
-python zenith_apk.py juego.apk --target 36 --fps --widescreen --notch
-python zenith_apk.py juego.apk --target 24 --solo-decompilar
-python zenith_apk.py --help
+python asdkupdate.py juego.apk --target 36 --fps --widescreen --notch
+python asdkupdate.py juego.apk --target 24 --solo-decompilar
+python asdkupdate.py --help
 ```
 
 ## Qué hace cada opción

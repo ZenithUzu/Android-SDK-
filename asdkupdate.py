@@ -1,8 +1,8 @@
 """
-Zenith APK Tool - programa de PC para decompilar APKs, aplicar mejoras y volver a armarlos.
+aSDKupdate - programa de PC para decompilar APKs, aplicar mejoras y volver a armarlos.
 
-  python zenith_apk.py                         -> abre la interfaz
-  python zenith_apk.py juego.apk [opciones]    -> todo de una vez, sin interfaz (ver --help)
+  python asdkupdate.py                         -> abre la interfaz
+  python asdkupdate.py juego.apk [opciones]    -> todo de una vez, sin interfaz (ver --help)
 
 Necesita: Python 3.8+, Java y el Android SDK (los trae Android Studio). apktool se descarga solo.
 """
@@ -188,14 +188,14 @@ def patch(src, target, improvements, log):
         app.set(A + "appCategory", "game")
         app.set(A + "isGame", "true")
         (src / "res" / "xml").mkdir(parents=True, exist_ok=True)
-        (src / "res" / "xml" / "zenith_game_mode.xml").write_text(
+        (src / "res" / "xml" / "asdkupdate_game_mode.xml").write_text(
             '<?xml version="1.0" encoding="utf-8"?>\n'
             '<game-mode-config xmlns:android="http://schemas.android.com/apk/res/android"\n'
             '    android:supportsPerformanceGameMode="true"\n'
             '    android:supportsBatteryGameMode="true"\n'
             '    android:allowGameFpsOverride="true"\n'
             '    android:allowGameDownscaling="false" />\n', encoding="utf-8")
-        meta("android.game_mode_config", resource="@xml/zenith_game_mode")
+        meta("android.game_mode_config", resource="@xml/asdkupdate_game_mode")
         changes.append("modo juego: el sistema / Game Dashboard puede cambiar los FPS (Android 13+)")
 
     tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
@@ -256,7 +256,7 @@ def gui():
     from tkinter import filedialog, messagebox, scrolledtext, ttk
 
     root = tk.Tk()
-    root.title("Zenith APK Tool")
+    root.title("aSDKupdate")
     root.geometry("760x620")
     apk_var, src_var = tk.StringVar(), tk.StringVar()
     target_var, custom_var = tk.StringVar(value="36"), tk.StringVar(value="35")
