@@ -15,6 +15,7 @@ import sys
 import threading
 import urllib.request
 import xml.etree.ElementTree as ET
+import zipfile
 from pathlib import Path
 
 ANDROID = "http://schemas.android.com/apk/res/android"
@@ -544,7 +545,29 @@ def install(apk, log):
         run([adb(), "install", "-r", str(apk)], log)
     except RuntimeError as e:
         hint = next((v for k, v in ADB_ERRORS.items() if k in str(e)), None)
+        if "NO_MATCHING_ABIS" in str(e):
+            hint += abi_report(apk)
         raise RuntimeError(f"{e}\n\n{hint}" if hint else str(e))
+
+
+def abi_report(apk):
+    """Compara los procesadores que trae el APK (lib/<abi>/) con los que acepta el teléfono."""
+    with zipfile.ZipFile(apk) as z:
+        apk_abis = sorted({n.split("/")[1] for n in z.namelist() if n.startswith("lib/") and n.count("/") >= 2})
+    try:
+        phone = subprocess.run([adb(), "shell", "getprop", "ro.product.cpu.abilist"], stdout=subprocess.PIPE,
+                               stderr=subprocess.DEVNULL, text=True, timeout=15).stdout.strip().split(",")
+    except (OSError, subprocess.SubprocessError):
+        phone = []
+    phone = [a for a in phone if a]
+    msg = f"\n\nEl APK trae: {', '.join(apk_abis) or 'ninguna'}\nEl teléfono acepta: {', '.join(phone) or '?'}"
+    if phone and apk_abis and not set(apk_abis) & set(phone):
+        if set(apk_abis) <= {"armeabi", "armeabi-v7a", "x86"} and "arm64-v8a" in phone:
+            msg += ("\n\nEl APK es solo de 32 bits y este teléfono solo ejecuta 64 bits. Las librerías nativas no se"
+                    " pueden convertir: consigue la versión arm64-v8a del juego.")
+        else:
+            msg += "\n\nNinguna coincide: necesitas una versión del juego para el procesador de este teléfono."
+    return msg
 
 
 def phone_errors(log):
