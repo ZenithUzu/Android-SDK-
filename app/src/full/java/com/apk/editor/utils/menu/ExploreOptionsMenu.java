@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.apk.editor.R;
+import com.apk.editor.activities.Android16Activity;
 import com.apk.editor.activities.QuickEditsActivity;
 import com.apk.editor.utils.tasks.ExploreAPK;
 
@@ -38,12 +39,15 @@ public class ExploreOptionsMenu {
             new sSingleItemDialog(0, null, new String[] {
                     activity.getString(R.string.explore_options_simple),
                     activity.getString(R.string.explore_options_full),
-                    activity.getString(R.string.explore_options_quick)
+                    activity.getString(R.string.explore_options_quick),
+                    activity.getString(R.string.explore_options_android16)
             }, activity) {
 
                 @Override
                 public void onItemSelected(int itemPosition) {
-                    if (itemPosition == 2) {
+                    if (itemPosition == 3) {
+                        launchAndroid16Activity(packageName, apkFile != null ? apkFile.getAbsolutePath() : null, uri, activity);
+                    } else if (itemPosition == 2) {
                         launchQuickEditActivity(packageName, apkFile != null ? apkFile.getAbsolutePath() : null, uri, activity);
                     } else {
                         new ExploreAPK(packageName, apkFile, uri, itemPosition, activity).execute();
@@ -70,6 +74,18 @@ public class ExploreOptionsMenu {
             intent.putExtra(QuickEditsActivity.APK_PATH_INTENT, apkPath);
         } else if (packageName != null && sPackageUtils.isPackageInstalled(packageName, activity)) {
             intent.putExtra(QuickEditsActivity.PACKAGE_NAME_INTENT, packageName);
+        }
+        activity.startActivity(intent);
+    }
+
+    private static void launchAndroid16Activity(String packageName, String apkPath, Uri uri, Activity activity) {
+        Intent intent = new Intent(activity, Android16Activity.class);
+        if (uri != null) {
+            intent.putExtra(Android16Activity.URI_INTENT, uri);
+        } else if (apkPath != null && sFileUtils.exist(apkPath)) {
+            intent.putExtra(Android16Activity.APK_PATH_INTENT, apkPath);
+        } else if (packageName != null && sPackageUtils.isPackageInstalled(packageName, activity)) {
+            intent.putExtra(Android16Activity.PACKAGE_NAME_INTENT, packageName);
         }
         activity.startActivity(intent);
     }

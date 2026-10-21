@@ -17,7 +17,7 @@ android {
         minSdkVersion 23
         targetSdk 37
         versionCode 36
-        versionName "v0.36"
+        versionName "v0.36-zenith1"
         vectorDrawables.useSupportLibrary = true
         testFunctionalTest = false
         testHandleProfiling = false
@@ -44,11 +44,11 @@ android {
     flavorDimensions.add("release")
     productFlavors {
         play {
-            applicationId "com.apk.explorer"
+            applicationId "io.github.zenithuzu.apkexplorer"
             dimension "release"
         }
         full {
-            applicationId "com.apk.editor"
+            applicationId "io.github.zenithuzu.apkeditor"
             dimension "release"
         }
     }

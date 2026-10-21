@@ -39,20 +39,25 @@ public class ZipAlign {
             readAmount = (int) fileLength;
         }
 
-        // find the signature
+        // find the signature: scan BACKWARDS from the end so the last (real) EOCD wins.
+        // (The previous forward scan skipped bytes after a partial match and could pick
+        // up a false "PK\5\6" inside file data.)
+        byte[] tail = new byte[readAmount];
         file.seek(seekStart);
+        file.readFully(tail);
 
         int i;
-        for (i = readAmount - 4; i >= 0; i--) {
-            if (file.readByte() != 0x50) continue;
-            file.seek(file.getFilePointer() - 1);
-            if (file.readInt() == 0x504b0506) break; // EOCD signature (in big-endian)
+        for (i = readAmount - 22; i >= 0; i--) {
+            if (tail[i] == 0x50 && tail[i + 1] == 0x4b && tail[i + 2] == 0x05 && tail[i + 3] == 0x06) {
+                int commentLength = (tail[i + 20] & 0xff) | ((tail[i + 21] & 0xff) << 8);
+                if (i + 22 + commentLength == readAmount) break; // record must reach exactly to the end of file
+            }
         }
 
         if (i < 0)
             throw new IOException("No end-of-central-directory found");
 
-        long eocdPosition = file.getFilePointer() - 4;
+        long eocdPosition = seekStart + i;
 
         // skip disk fields
         file.seek(eocdPosition + 10);
@@ -63,7 +68,8 @@ public class ZipAlign {
                 .order(ByteOrder.LITTLE_ENDIAN);
 
         // read em
-        short totalEntries = eocdBuffer.getShort();
+        int totalEntries = eocdBuffer.getShort() & 0xffff;
+        eocdBuffer.getInt(); // central directory size (not needed)
         int centralDirOffset = eocdBuffer.getInt();
 
         ArrayList<Alignment> neededAlignments = new ArrayList<>();

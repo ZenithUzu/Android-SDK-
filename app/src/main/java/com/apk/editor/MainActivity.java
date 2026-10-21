@@ -36,7 +36,7 @@ public class MainActivity extends BaseActivity {
         sThemeUtils.initializeAppTheme(this);
         AppSettings.initializeAppLanguage(this);
 
-        new CrashReporter("E-Mail: apkeditor@protonmail.com", this).initialize();
+        new CrashReporter("GitHub: https://github.com/ZenithUzu/Android-SDK-/issues", this).initialize();
 
         NavView mNavView = findViewById(R.id.nav_view);
 

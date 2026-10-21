@@ -161,4 +161,25 @@
     <string name="cancelling">"Cancelando…"</string>
     <string name="replace_file_question">"¿Deseás reemplazar a %s con el archivo seleccionado?"</string>
     <string name="update">"Actualiza"</string>
+
+    <!-- Compatibilidad Android 16 (Zenith APK Editor) -->
+    <string name="explore_options_android16">Compatibilidad Android 16 (subir SDK)</string>
+    <string name="android16_title">Compatibilidad Android 16</string>
+    <string name="android16_mode">SDK objetivo</string>
+    <string name="android16_mode_full">Android 16 (API 36) — recomendado</string>
+    <string name="android16_mode_min">Mínimo instalable en Android 16 (API 24) — menos cambios</string>
+    <string name="android16_mode_custom">Personalizado</string>
+    <string name="android16_custom_hint">targetSdkVersion (24–99)</string>
+    <string name="android16_custom_error">Escribe un número entre %d y 99</string>
+    <string name="android16_fix_exported">Añadir android:exported automáticamente (obligatorio desde API 31)</string>
+    <string name="android16_raise_min">Subir también minSdkVersion a 24</string>
+    <string name="android16_apply">Parchear, alinear y firmar</string>
+    <string name="android16_progress">Haciendo compatible el APK…</string>
+    <string name="android16_info">Paquete: %1$s\nminSdkVersion: %2$d\ntargetSdkVersion: %3$d</string>
+    <string name="android16_blocked">⛔ Android 15/16/17 no instalan apps con targetSdk menor a %d. El parche lo corrige.</string>
+    <string name="android16_bundle">App dividida: se parchearán y firmarán juntos %d APK.</string>
+    <string name="android16_no_input">No se pudo abrir el APK.</string>
+    <string name="android16_done">Listo. Guardado en:\n%s</string>
+    <string name="android16_failed">El parche falló. Detalles:</string>
+    <string name="android16_note">El resultado se firma con la clave de esta app: desinstala la app original antes de instalarlo. Subir el SDK cambia cómo Android trata a la app; si falla, prueba el modo API 24.</string>
 </resources>

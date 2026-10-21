@@ -216,4 +216,25 @@
     <string name="xml_modify_title">Modify this value to</string>
     <string name="yes">Yes</string>
     <string name="zip_aligning">Zip aligning…</string>
+
+    <!-- Android 16 compatibility (Zenith APK Editor) -->
+    <string name="explore_options_android16">Android 16 compatibility (raise SDK)</string>
+    <string name="android16_title">Android 16 compatibility</string>
+    <string name="android16_mode">Target SDK</string>
+    <string name="android16_mode_full">Android 16 (API 36) — recommended</string>
+    <string name="android16_mode_min">Minimum installable on Android 16 (API 24) — fewest changes</string>
+    <string name="android16_mode_custom">Custom</string>
+    <string name="android16_custom_hint">targetSdkVersion (24–99)</string>
+    <string name="android16_custom_error">Enter a number between %d and 99</string>
+    <string name="android16_fix_exported">Add android:exported automatically (required since API 31)</string>
+    <string name="android16_raise_min">Also raise minSdkVersion to 24</string>
+    <string name="android16_apply">Patch, align and sign</string>
+    <string name="android16_progress">Making the APK compatible…</string>
+    <string name="android16_info">Package: %1$s\nminSdkVersion: %2$d\ntargetSdkVersion: %3$d</string>
+    <string name="android16_blocked">⛔ Android 15/16/17 refuse to install apps targeting below API %d. Patching fixes that.</string>
+    <string name="android16_bundle">Split app: %d APKs will be patched and signed together.</string>
+    <string name="android16_no_input">Could not open the APK.</string>
+    <string name="android16_done">Done. Saved to:\n%s</string>
+    <string name="android16_failed">The patch failed. Details:</string>
+    <string name="android16_note">The result is signed with this app\'s key: uninstall the original app before installing it. Raising the target SDK changes how Android treats the app; if it misbehaves, try the API 24 mode.</string>
 </resources>

@@ -18,7 +18,8 @@ import java.util.Objects;
 public class APKEditorUtils {
 
     public static boolean isFullVersion(Context context) {
-        return context.getPackageName().equals("com.apk.editor") || context.getPackageName().equals("com.apk.editor.debug");
+        // Based on the build flavor instead of a hard-coded package name, so the fork can use its own applicationId
+        return "full".equals(com.apk.editor.BuildConfig.FLAVOR);
     }
 
     public static CharSequence fromHtml(String text) {
