@@ -1,19 +1,5 @@
-*.iml
-.gradle
-.idea
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
-
-# apktool se descarga aparte (ver README, "Usar en PC")
-/tools/apktool.jar
+apktool.jar
+apktool.jar.part
 *-src/
+*_mod.apk
+__pycache__/

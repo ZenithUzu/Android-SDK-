@@ -1,180 +1,80 @@
-# Zenith APK Editor
+# Zenith APK Tool
 
-![icono](app/src/main/res/mipmap-xxxhdpi/ic_launcher.png?raw=true)
+Programa de **PC** (Windows, Linux o macOS) con interfaz para **decompilar** un APK, **aplicar mejoras**
+(SDK para Android 16, FPS, pantalla ancha…), dejarlo **desempaquetado** para que edites lo que quieras, y
+**volver a armarlo** firmado y listo para instalar.
 
-[![Compilar APK](https://github.com/ZenithUzu/Android-SDK-/actions/workflows/android.yml/badge.svg)](https://github.com/ZenithUzu/Android-SDK-/actions/workflows/android.yml)
-![Licencia](https://img.shields.io/badge/licencia-GPL--3.0-blue)
-![Android](https://img.shields.io/badge/Android-6.0%20a%2017-green)
+Es un solo archivo de Python (`zenith_apk.py`). Usa [apktool](https://apktool.org) para desempaquetar y
+armar, y las herramientas oficiales del Android SDK (`zipalign`, `apksigner`) para alinear y firmar.
 
-App para **Android** que decompila aplicaciones, te deja editarlas, las vuelve a compilar y firmar, y además
-**sube su SDK para que se puedan instalar y ejecutar en Android 16**, todo desde el teléfono, sin PC.
+## Requisitos (una vez)
 
-Está basada en [APK Explorer & Editor (AEE)](https://github.com/apk-editor/APK-Explorer-Editor) v0.36,
-un proyecto libre y activo; este fork añade la función **Compatibilidad Android 16** y corrige dos errores del
-alineado de ZIP.
+1. [Python 3.8+](https://www.python.org/downloads/). En Windows marca *"Add python.exe to PATH"*.
+2. [Android Studio](https://developer.android.com/studio): trae Java y el Android SDK. Ábrelo una vez para
+   que descargue el SDK.
+3. apktool se descarga solo la primera vez. Si falla, baja el `.jar` de [apktool.org](https://apktool.org) y
+   guárdalo como `apktool.jar` junto a `zenith_apk.py`.
 
-## Qué puede hacer
+## Uso con interfaz
 
-**Decompilar y explorar**
-* Abrir una app instalada o un `.apk` / `.apks` / `.xapk` / `.apkm` del almacenamiento.
-* *Decompilación simple* (rápida) o *completa* (convierte `classes.dex` a código **smali**).
-* Ver y editar `AndroidManifest.xml` y cualquier XML binario, ver `resources.arsc`, imágenes, fuentes, etc.
-* Exportar, borrar o reemplazar archivos y recursos.
+Doble clic en **`Zenith APK Tool.bat`** (o `python zenith_apk.py`).
 
-**Compilar y firmar**
-* Volver a ensamblar el smali modificado a `classes.dex`.
-* Reconstruir el APK, alinearlo (zipalign) y firmarlo con esquemas **v1 + v2 + v3** (y v4 en Android 11+).
-* Firmar con la clave propia de la app o con tu propio keystore; firmar APK o bundles por lotes.
-* Instalador integrado de APK y APK divididos (split / bundles).
+1. **Elegir…** el APK.
+2. Elige el **SDK objetivo** y marca las **mejoras**.
+3. Pulsa **1. Decompilar**. Queda todo desempaquetado en `juego-src\` junto al APK.
+4. Pulsa **2. Aplicar mejoras**. Ahora puedes editar a mano: **Abrir carpeta**, o ábrela en Android Studio
+   (*File → Open*), y cambia `smali\`, `res\`, `assets\` o `AndroidManifest.xml`.
+5. Pulsa **3. Armar y firmar**. Sale `juego_mod.apk`.
+6. **Instalar (adb)** con el teléfono conectado y la depuración USB activada. Antes desinstala la app
+   original: la firma es distinta.
 
-**Edición rápida**
-* Cambiar nombre, paquete, versión y minSdk sin decompilar todo.
+**Todo (1+2+3)** hace los tres pasos de una vez. Si ya tienes una carpeta decompilada, elígela en
+*Carpeta decompilada* y pulsa solo 3.
 
-**Compatibilidad Android 16** *(nuevo en este fork)*
-* Sube `targetSdkVersion` a **36 (Android 16)**, al **mínimo instalable (24)** o al valor que elijas.
-* Añade `android:exported="true"` a las actividades/servicios/receivers con `intent-filter`
-  (obligatorio desde API 31; sin esto Android rechaza instalar la app).
-* Quita `maxSdkVersion` si bloqueaba la instalación y, opcionalmente, sube `minSdkVersion` a 24.
-* Elimina la firma vieja, guarda `resources.arsc` sin comprimir y alinea a 4 bytes y las `.so` a **16 KB**
-  (requisitos de Android 11+ y Android 15+).
-* Revisa las librerías nativas de 64 bits y avisa si están compiladas para páginas de 4 KB.
-* Funciona con apps divididas (split APK): parchea el APK base y vuelve a firmar todos juntos.
-* Conserva las referencias a recursos (tema, icono, nombre traducido de la app).
-* Al final muestra un informe de lo que cambió y de los cambios de comportamiento a revisar.
+## Uso por consola
 
-## Por qué hace falta
-
-Desde Android 14 el sistema se niega a instalar apps "viejas": en **Android 15, 16 y 17 el mínimo es
-`targetSdkVersion` 24** (Android 7.0). Muchas apps y juegos antiguos fallan con
-`INSTALL_FAILED_DEPRECATED_SDK_VERSION`. Subir el SDK objetivo, añadir `exported` y realinear es justo lo que
-hace este parche.
-
-## Cómo usarlo
-
-1. Abre la app y elige una app instalada (pestaña *Apps*) o un APK (pestaña *APKs*).
-2. En el menú que aparece, toca **Compatibilidad Android 16 (subir SDK)**.
-3. Elige el modo:
-   * **Android 16 (API 36)** – lo recomendado si la app es reciente o la vas a mantener.
-   * **Mínimo instalable (API 24)** – el que menos cambia el comportamiento; ideal para apps/juegos viejos.
-   * **Personalizado** – cualquier valor entre 24 y 99.
-4. Toca **Parchear, alinear y firmar**. El APK queda en `Download/AEE/` con el sufijo `_api36` / `_api24`
-   (una carpeta con todos los APK si la app es dividida).
-5. **Desinstala la app original** (la firma es distinta) y toca **Instalar**.
-
-> Si en *Ajustes → On Exploring an App* elegiste una opción fija, vuelve a *Prompt* para que aparezca el menú.
-
-### Lo que el parche *no* puede arreglar
-
-Subir el SDK cambia cómo Android trata a la app. Esto depende del código de la app y no se arregla editando
-el manifest (la app te avisa en el informe):
-
-| Desde | Cambio | Síntoma típico |
-|---|---|---|
-| API 23 | Permisos en tiempo de ejecución | La app no tiene cámara/ubicación → concédelos en Ajustes |
-| API 24 | `file://` prohibido al compartir | Crash al compartir archivos |
-| API 30 | Almacenamiento con alcance | No encuentra archivos en `/sdcard` |
-| API 31 | `PendingIntent` necesita `FLAG_IMMUTABLE` | Crash al mostrar notificaciones/alarmas |
-| API 34 | `foregroundServiceType`, `RECEIVER_EXPORTED` | Crash al iniciar servicios |
-| API 35/36 | Edge-to-edge obligatorio | La interfaz queda debajo de las barras |
-
-Si una app se cierra con API 36, vuelve a parchear el APK **original** con el modo **API 24**. Para corregir
-el código puedes usar la *decompilación completa*, editar el smali y recompilar desde la misma app.
-
-Las librerías `.so` compiladas para páginas de 4 KB solo se pueden arreglar recompilándolas desde su código
-fuente; en la mayoría de teléfonos (páginas de 4 KB) funcionan igual.
-
-## Usar en PC (Android Studio) — para lo que la app no puede
-
-Lo que el parche no arregla (crashes por código, edge-to-edge, librerías nativas) se corrige mejor en PC.
-`tools/android16.ps1` hace el mismo parche con herramientas de escritorio y te deja editar en medio.
-
-**Una vez:**
-1. Instala [Android Studio](https://developer.android.com/studio) (trae Java y el SDK con `zipalign`/`apksigner`).
-2. Descarga `apktool_X.Y.Z.jar` de [apktool.org](https://apktool.org) y guárdalo como `tools/apktool.jar`.
-3. Opcional: [jadx-gui](https://github.com/skylot/jadx/releases) para *leer* el código como Java.
-
-**Cada app** (PowerShell, en la carpeta `tools`):
-
-```powershell
-.\android16.ps1 -Apk C:\apks\juego.apk              # parche directo a API 36
-.\android16.ps1 -Apk C:\apks\juego.apk -Target 24   # el que menos cambia
-.\android16.ps1 -Apk C:\apks\juego.apk -Edit        # pausa para editar antes de recompilar
-adb install C:\apks\juego_api36.apk
+```bat
+python zenith_apk.py juego.apk --target 36 --fps --widescreen --notch
+python zenith_apk.py juego.apk --target 24 --solo-decompilar
+python zenith_apk.py --help
 ```
 
-Si Windows bloquea el script, ejecútalo como `powershell -ExecutionPolicy Bypass -File .\android16.ps1 -Apk …`.
+## Qué hace cada opción
 
-Con `-Edit` el script decompila a `juego-src\` y espera. Ábrela en Android Studio (*File → Open*) y edita
-`smali\`, `res\` o `AndroidManifest.xml`; luego presiona Enter y la recompila, alinea a 16 KB y firma con tu
-`debug.keystore`. Si la app se cierra, mira el motivo en **Logcat** de Android Studio con el teléfono conectado.
-Para depurar paso a paso el smali: *File → Profile or Debug APK*.
-
-**Arreglos típicos con `-Edit`:**
-
-| Problema (Logcat) | Dónde | Arreglo |
-|---|---|---|
-| `Targeting S+ ... FLAG_IMMUTABLE` | smali que llama a `PendingIntent;->get…` | Justo antes de la llamada: `or-int/lit32 vN, vN, 0x4000000` (vN = registro de *flags*, añade FLAG_IMMUTABLE) |
-| `MissingForegroundServiceTypeException` | `AndroidManifest.xml` | `android:foregroundServiceType="dataSync"` (u otro) en el `<service>` y el permiso `FOREGROUND_SERVICE_DATA_SYNC` |
-| `One of RECEIVER_EXPORTED…` | smali de `registerReceiver` | Usar la variante con flags (`0x2` = EXPORTED, `0x4` = NOT_EXPORTED) o bajar a `-Target 33` |
-| Interfaz bajo las barras | `res\values\styles.xml` del tema | Con `-Target 35`: `<item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>` (en 36 ya no se puede excluir) |
-| Cámara/ubicación no funcionan (permisos nunca pedidos) | Ajustes del teléfono | Concederlos a mano en *Ajustes → Apps → Permisos* |
-| `.so` de 4 KB en teléfono con páginas de 16 KB | Código fuente de la librería | Recompilar con NDK r28+ (16 KB por defecto) o `-Wl,-z,max-page-size=16384`; sin código fuente no tiene arreglo |
-
-## Descargar
-
-* **Última compilación:** pestaña [Actions](https://github.com/ZenithUzu/Android-SDK-/actions) → la ejecución
-  más reciente → artefacto `ZenithAPKEditor-…` (contiene `ZenithAPKEditor-debug.apk`, listo para instalar).
-* **Versiones:** cuando se publica un tag `v*` el APK aparece en
-  [Releases](https://github.com/ZenithUzu/Android-SDK-/releases).
-
-Se instala junto a AEE original sin reemplazarlo (paquete `io.github.zenithuzu.apkeditor`).
-
-## Compilar tú mismo
-
-Requisitos: JDK 17 o más nuevo y Android SDK con *platform 37* (Gradle lo descarga si falta).
-
-```bash
-git clone https://github.com/ZenithUzu/Android-SDK-.git
-cd Android-SDK-
-echo "sdk.dir=/ruta/a/Android/Sdk" > local.properties   # o define ANDROID_HOME
-./gradlew assembleFullDebug
-# APK: app/build/outputs/apk/full/debug/app-full-debug.apk
-```
-
-También se abre tal cual en Android Studio. Sabores: `full` (todas las funciones) y `play` (solo explorar).
-
-### Dónde está el código nuevo
-
-| Archivo | Qué hace |
+| Opción | Cambio en el APK |
 |---|---|
-| `app/src/main/java/com/apk/editor/utils/SdkUpgrader.java` | Núcleo del parche: manifest, reempaquetado, alineado, chequeo ELF de 16 KB |
-| `app/src/main/java/com/apk/editor/activities/Android16Activity.java` | Pantalla "Compatibilidad Android 16" |
-| `app/src/main/res/layout/activity_android16.xml` | Diseño de la pantalla |
-| `app/src/full/java/com/apk/editor/utils/menu/ExploreOptionsMenu.java` | Entrada en el menú |
-| `app/src/main/java/com/apk/editor/utils/ZipAlign.java` | Corregido: leía el *tamaño* del directorio central como su *posición* y podía fallar al buscar el final del ZIP, así que el APK salía sin alinear |
+| **Android 16 (API 36)** | Sube `targetSdkVersion`, quita `maxSdkVersion` y añade `android:exported` a los componentes con `intent-filter`. Sin eso, Android 12+ no instala la app. |
+| **Mínimo instalable (API 24)** | Lo mínimo que Android 15, 16 y 17 aceptan instalar. Es el que menos cambia el comportamiento: úsalo con juegos viejos. |
+| **FPS dinámicos / 60+ fps** | Marca la app como juego (`isGame`, `appCategory=game`) y añade la configuración de *modo juego* con `allowGameFpsOverride`. Así, en Android 13+, el Game Dashboard o el modo juego del fabricante pueden cambiar los FPS y el modo rendimiento/batería. |
+| **Pantalla ancha** | `resizeableActivity=true`, `android.max_aspect=3.0` y quita `maxAspectRatio`. Se acaban las franjas negras en pantallas 19.5:9, 20:9 y 21:9. |
+| **Notch / cámara** | `windowLayoutInDisplayCutoutMode=shortEdges` en el tema, más los ajustes de Huawei y Xiaomi. |
+| **Girar en ambos sentidos** | `landscape` → `sensorLandscape` (y lo mismo en vertical). |
+| **Aceleración por hardware** | `hardwareAccelerated=true` en toda la app. Los juegos viejos con Canvas van más fluidos. |
+
+Siempre: alinea a 4 bytes y las `.so` a **16 KB** (Android 15+) y firma v1+v2+v3 con tu `debug.keystore` de
+Android Studio (lo crea si no existe).
+
+### Límites (léelo)
+
+* **FPS:** si el juego tiene el límite de FPS escrito en su código (por ejemplo `Application.targetFrameRate = 30`
+  en Unity), el modo juego no lo puede pasar por encima. Hay que cambiarlo a mano: en juegos Java/smali, busca el
+  número en `smali\` entre los pasos 2 y 3. En Unity IL2CPP está dentro de `libil2cpp.so` y no se puede editar
+  así.
+* **Pantalla ancha:** quita el límite del sistema. Si el juego dibuja a 16:9 fijo, se verá estirado o con bordes
+  propios.
+* **Subir a 36** puede romper apps viejas. Lo que dice Logcat y cómo arreglarlo:
+
+| Error en Logcat (Android Studio) | Arreglo con el paso 2 → editar → 3 |
+|---|---|
+| `Targeting S+ ... FLAG_IMMUTABLE` | En el smali, antes de `PendingIntent;->get…`: `or-int/lit32 vN, vN, 0x4000000` (vN = registro de *flags*) |
+| `MissingForegroundServiceTypeException` | En el manifest: `android:foregroundServiceType="dataSync"` en el `<service>` y el permiso `FOREGROUND_SERVICE_DATA_SYNC` |
+| `One of RECEIVER_EXPORTED…` | Bajar a SDK 33 (*Otro: 33*) |
+| La interfaz queda bajo las barras | SDK 35 y, en el tema, `<item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>` |
+| Crash en `lib….so` en teléfonos de 16 KB | Recompilar esa librería con NDK r28+. Sin su código fuente no tiene arreglo. |
+
+Si no quieres pelear con esto, usa **API 24**.
 
 ## Uso responsable
 
-Modifica solo apps que sean tuyas, libres o que tengas derecho a modificar, y no redistribuyas apps de
-terceros parcheadas. Las apps reempaquetadas pierden la firma original: no reciben actualizaciones de la tienda.
-
-## Créditos
-
-* [APK Explorer & Editor](https://github.com/apk-editor/APK-Explorer-Editor) y
-  [sunilpaulmathew](https://github.com/sunilpaulmathew) — la base de toda la app.
-* Lista completa de colaboradores y librerías: [Credits.md](Credits.md).
-* Función *Compatibilidad Android 16* y correcciones: [ZenithUzu](https://github.com/ZenithUzu).
-
-## Licencia
-
-    Copyright (C) 2021-2026 APK Explorer & Editor <apkeditor@protonmail.com>
-    Copyright (C) 2026 ZenithUzu (modificaciones de este fork)
-
-    Este programa es software libre: puedes redistribuirlo y/o modificarlo bajo los términos de la
-    GNU General Public License publicada por la Free Software Foundation, versión 3 o (a tu elección)
-    cualquier versión posterior.
-
-    Se distribuye con la esperanza de que sea útil, pero SIN NINGUNA GARANTÍA; ni siquiera la garantía
-    implícita de COMERCIABILIDAD o IDONEIDAD PARA UN PROPÓSITO PARTICULAR. Consulta la GNU General Public
-    License para más detalles. Deberías haber recibido una copia junto con este programa (archivo LICENSE);
-    si no, visita <https://www.gnu.org/licenses/>.
+Modifica solo apps tuyas, libres o que tengas derecho a modificar, y no redistribuyas APKs de terceros. Una app
+re-firmada no recibe actualizaciones de la tienda.
