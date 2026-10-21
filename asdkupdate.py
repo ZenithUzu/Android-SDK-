@@ -28,6 +28,18 @@ HERE = Path(__file__).resolve().parent
 MIN_INSTALLABLE = 24  # Android 15, 16 y 17 no instalan apps con targetSdk < 24
 COMPONENTS = ("activity", "activity-alias", "service", "receiver")
 
+ANDROID_VERSIONS = [("No cambiar el SDK", 0)] + [(f"Android {n} (API {api})", api) for n, api in (
+    ("17", 37), ("16", 36), ("15", 35), ("14", 34), ("13", 33), ("12L", 32), ("12", 31), ("11", 30),
+    ("10", 29), ("9", 28), ("8.1", 27), ("8.0", 26), ("7.1", 25), ("7.0", 24))]
+
+FIXES = {
+    "pendingintent": "Notificaciones/alarmas: PendingIntent sin FLAG_IMMUTABLE (crash desde Android 12)",
+    "receiver": "registerReceiver sin RECEIVER_EXPORTED (crash desde Android 14)",
+    "fgs": "Servicios en primer plano sin tipo (crash desde Android 14)",
+    "fileuri": "Compartir archivos file:// (crash desde Android 7)",
+    "edge": "Interfaz debajo de las barras (edge-to-edge; solo hasta Android 15 / API 35)",
+}
+
 IMPROVEMENTS = {
     "fps": "FPS dinámicos / 60+ fps (modo juego Android 13+, permite al sistema cambiar los FPS)",
     "widescreen": "Pantalla ancha (sin franjas negras, cualquier relación de aspecto)",
@@ -35,6 +47,160 @@ IMPROVEMENTS = {
     "rotation": "Girar en ambos sentidos (horizontal y vertical invertidas)",
     "hwaccel": "Aceleración por hardware (juegos viejos van más fluidos)",
 }
+
+
+# Clase que se mete en el APK: compilada de Java con javac + d8 y pasada a smali con apktool.
+FIX_SMALI = """.class public final Lasdkupdate/Fix;
+.super Ljava/lang/Object;
+# direct methods
+.method public constructor <init>()V
+    .locals 0
+    invoke-direct {p0}, Ljava/lang/Object;-><init>()V
+    return-void
+.end method
+.method private static flags(ILandroid/content/Intent;)I
+    .locals 2
+    sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
+    const/16 v1, 0x1f
+    if-lt v0, v1, :cond_3
+    const/high16 v0, 0x6000000
+    and-int/2addr v0, p0
+    if-nez v0, :cond_3
+    if-eqz p1, :cond_1
+    invoke-virtual {p1}, Landroid/content/Intent;->getComponent()Landroid/content/ComponentName;
+    move-result-object v0
+    if-nez v0, :cond_0
+    invoke-virtual {p1}, Landroid/content/Intent;->getPackage()Ljava/lang/String;
+    move-result-object p1
+    if-eqz p1, :cond_1
+    :cond_0
+    const/4 p1, 0x1
+    goto :goto_0
+    :cond_1
+    const/4 p1, 0x0
+    :goto_0
+    if-eqz p1, :cond_2
+    const/high16 p1, 0x2000000
+    goto :goto_1
+    :cond_2
+    const/high16 p1, 0x4000000
+    :goto_1
+    or-int/2addr p0, p1
+    :cond_3
+    return p0
+.end method
+.method public static getActivities(Landroid/content/Context;I[Landroid/content/Intent;I)Landroid/app/PendingIntent;
+    .locals 1
+    const/4 v0, 0x0
+    invoke-static {p3, v0}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3}, Landroid/app/PendingIntent;->getActivities(Landroid/content/Context;I[Landroid/content/Intent;I)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static getActivities(Landroid/content/Context;I[Landroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/PendingIntent;
+    .locals 1
+    const/4 v0, 0x0
+    invoke-static {p3, v0}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3, p4}, Landroid/app/PendingIntent;->getActivities(Landroid/content/Context;I[Landroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    .locals 0
+    invoke-static {p3, p2}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static getActivity(Landroid/content/Context;ILandroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/PendingIntent;
+    .locals 0
+    invoke-static {p3, p2}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3, p4}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;ILandroid/os/Bundle;)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static getBroadcast(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    .locals 0
+    invoke-static {p3, p2}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3}, Landroid/app/PendingIntent;->getBroadcast(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static getForegroundService(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    .locals 0
+    invoke-static {p3, p2}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3}, Landroid/app/PendingIntent;->getForegroundService(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static getService(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    .locals 0
+    invoke-static {p3, p2}, Lasdkupdate/Fix;->flags(ILandroid/content/Intent;)I
+    move-result p3
+    invoke-static {p0, p1, p2, p3}, Landroid/app/PendingIntent;->getService(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;
+    move-result-object p0
+    return-object p0
+.end method
+.method public static init()V
+    .locals 1
+    new-instance v0, Landroid/os/StrictMode$VmPolicy$Builder;
+    invoke-direct {v0}, Landroid/os/StrictMode$VmPolicy$Builder;-><init>()V
+    invoke-virtual {v0}, Landroid/os/StrictMode$VmPolicy$Builder;->build()Landroid/os/StrictMode$VmPolicy;
+    move-result-object v0
+    invoke-static {v0}, Landroid/os/StrictMode;->setVmPolicy(Landroid/os/StrictMode$VmPolicy;)V
+    return-void
+.end method
+.method public static registerReceiver(Landroid/content/Context;Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;)Landroid/content/Intent;
+    .locals 2
+    sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
+    const/16 v1, 0x21
+    if-lt v0, v1, :cond_0
+    const/4 v0, 0x2
+    invoke-virtual {p0, p1, p2, v0}, Landroid/content/Context;->registerReceiver(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;I)Landroid/content/Intent;
+    move-result-object p0
+    goto :goto_0
+    :cond_0
+    invoke-virtual {p0, p1, p2}, Landroid/content/Context;->registerReceiver(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;)Landroid/content/Intent;
+    move-result-object p0
+    :goto_0
+    return-object p0
+.end method
+.method public static registerReceiver(Landroid/content/Context;Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;Ljava/lang/String;Landroid/os/Handler;)Landroid/content/Intent;
+    .locals 8
+    sget v0, Landroid/os/Build$VERSION;->SDK_INT:I
+    const/16 v1, 0x21
+    if-lt v0, v1, :cond_0
+    const/4 v7, 0x2
+    move-object v2, p0
+    move-object v3, p1
+    move-object v4, p2
+    move-object v5, p3
+    move-object v6, p4
+    invoke-virtual/range {v2 .. v7}, Landroid/content/Context;->registerReceiver(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;Ljava/lang/String;Landroid/os/Handler;I)Landroid/content/Intent;
+    move-result-object p0
+    goto :goto_0
+    :cond_0
+    move-object v2, p0
+    move-object v3, p1
+    move-object v4, p2
+    move-object v5, p3
+    move-object v6, p4
+    invoke-virtual {v2, v3, v4, v5, v6}, Landroid/content/Context;->registerReceiver(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;Ljava/lang/String;Landroid/os/Handler;)Landroid/content/Intent;
+    move-result-object p0
+    :goto_0
+    return-object p0
+.end method
+"""
+FIX_PI_SIGS = re.findall(r"public static (get\w+\([^)]*\)Landroid/app/PendingIntent;)", FIX_SMALI)
+RECEIVER_RE = re.compile(r"invoke-virtual(/range)? \{([^}]*)\}, L[^;]+;->registerReceiver\("
+                         r"(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;(?:Ljava/lang/String;Landroid/os/Handler;)?)"
+                         r"\)Landroid/content/Intent;")
 
 
 # ------------------------------------------------------------------ herramientas
@@ -198,6 +364,33 @@ def patch(src, target, improvements, log):
         meta("android.game_mode_config", resource="@xml/asdkupdate_game_mode")
         changes.append("modo juego: el sistema / Game Dashboard puede cambiar los FPS (Android 13+)")
 
+    if "fgs" in improvements:
+        perms = tree.getroot().findall("uses-permission")
+        if any(u.get(A + "name") == "android.permission.FOREGROUND_SERVICE" for u in perms):
+            n = 0
+            for svc in app.findall("service"):
+                if A + "foregroundServiceType" not in svc.attrib:
+                    svc.set(A + "foregroundServiceType", "specialUse")  # sin límite de tiempo, a diferencia de dataSync
+                    ET.SubElement(svc, "property", {A + "name": "android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE",
+                                                    A + "value": "legacy"})
+                    n += 1
+            special = "android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+            if n and not any(u.get(A + "name") == special for u in perms):
+                tree.getroot().insert(list(tree.getroot()).index(app), ET.Element("uses-permission", {A + "name": special}))
+            changes.append(f"tipo de servicio en primer plano en {n} servicio(s)")
+        else:
+            changes.append("servicios en primer plano: la app no los usa, nada que cambiar")
+
+    if "edge" in improvements:
+        themes = {app.get(A + "theme")} | {a.get(A + "theme") for a in activities}
+        styled = _add_style_item(src, themes, "android:windowOptOutEdgeToEdgeEnforcement", "true")
+        changes.append(f"edge-to-edge desactivado en {styled} tema(s)"
+                       + (" (Android 16+ lo ignora: usa API 35 o menos)" if target > 35 else ""))
+
+    smali_fixes = [f for f in ("pendingintent", "receiver", "fileuri") if f in improvements]
+    if smali_fixes:
+        changes += _patch_smali(src, tree.getroot(), smali_fixes)
+
     tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
     for c in changes:
         log("  + " + c)
@@ -219,6 +412,76 @@ def _add_style_item(src, theme_refs, item, value):
         if touched:
             tree.write(styles, encoding="utf-8", xml_declaration=True)
     return count
+
+
+def _patch_smali(src, manifest, fixes):
+    """Redirige llamadas peligrosas a Lasdkupdate/Fix; (mismos registros, sin tocar la lógica del juego)."""
+    changes, pi, rr = [], 0, 0
+    # sin la propia Fix.smali: si no, sus llamadas a PendingIntent se redirigirían a sí misma (recursión infinita)
+    files = [f for f in Path(src).glob("smali*/**/*.smali") if not f.as_posix().endswith("/asdkupdate/Fix.smali")]
+    for f in files:
+        text = f.read_text(encoding="utf-8")
+        new = text
+        if "pendingintent" in fixes:
+            for sig in FIX_PI_SIGS:
+                new = new.replace("Landroid/app/PendingIntent;->" + sig, "Lasdkupdate/Fix;->" + sig)
+        if "receiver" in fixes:
+            new = RECEIVER_RE.sub(r"invoke-static\1 {\2}, Lasdkupdate/Fix;->registerReceiver(Landroid/content/Context;\3)"
+                                  r"Landroid/content/Intent;", new)
+        if new != text:
+            pi += new.count("Lasdkupdate/Fix;->get") - text.count("Lasdkupdate/Fix;->get")
+            rr += new.count("Lasdkupdate/Fix;->registerReceiver") - text.count("Lasdkupdate/Fix;->registerReceiver")
+            f.write_text(new, encoding="utf-8")
+    if "pendingintent" in fixes:
+        changes.append(f"PendingIntent corregido en {pi} llamada(s)")
+    if "receiver" in fixes:
+        changes.append(f"registerReceiver corregido en {rr} llamada(s)")
+    injected = False
+    if "fileuri" in fixes:
+        msg, injected = _inject_init(src, manifest, files)
+        changes.append(msg)
+
+    if not (pi or rr or injected):
+        return changes
+    fix = next(Path(src).glob("smali*/asdkupdate/Fix.smali"), None)
+    if fix is None:
+        # en un dex nuevo para no pasar el límite de 64K métodos del dex principal
+        n = 2
+        while (Path(src) / f"smali_classes{n}").exists():
+            n += 1
+        fix = Path(src) / f"smali_classes{n}" / "asdkupdate" / "Fix.smali"
+        fix.parent.mkdir(parents=True)
+    fix.write_text(FIX_SMALI, encoding="utf-8")
+    return changes
+
+
+def _inject_init(src, manifest, files):
+    """Llama a Fix.init() al arrancar: en Application.onCreate o en onCreate de la actividad principal."""
+    pkg = manifest.get("package", "")
+    app = manifest.find("application")
+    targets = []
+    if app.get(A + "name"):
+        targets.append((app.get(A + "name"), ".method public onCreate()V"))
+    for a in app:
+        if a.tag in ("activity", "activity-alias") and any(c.get(A + "name") == "android.intent.category.LAUNCHER"
+                                                           for c in a.iter("category")):
+            name = a.get(A + "targetActivity") or a.get(A + "name")
+            targets.append((name, ".method public onCreate(Landroid/os/Bundle;)V"))
+            targets.append((name, ".method protected onCreate(Landroid/os/Bundle;)V"))
+    for cls, method in targets:
+        cls = pkg + cls if cls.startswith(".") else cls
+        path = "/".join(cls.split(".")) + ".smali"
+        for f in files:
+            if f.as_posix().endswith("/" + path):
+                text = f.read_text(encoding="utf-8")
+                if "Lasdkupdate/Fix;->init()V" in text:
+                    return "file:// ya estaba corregido", False
+                m = re.search(re.escape(method) + r"\n\s*\.(locals|registers) \d+\n", text)
+                if m:
+                    f.write_text(text[:m.end()] + "    invoke-static {}, Lasdkupdate/Fix;->init()V\n" + text[m.end():],
+                                 encoding="utf-8")
+                    return f"file:// corregido al iniciar ({cls.rsplit('.', 1)[-1]})", True
+    return "file://: no encontré onCreate de la app ni de la actividad principal (no se cambió)", False
 
 
 def build(src, log):
@@ -257,10 +520,11 @@ def gui():
 
     root = tk.Tk()
     root.title("aSDKupdate")
-    root.geometry("760x620")
+    root.geometry("780x820")
     apk_var, src_var = tk.StringVar(), tk.StringVar()
-    target_var, custom_var = tk.StringVar(value="36"), tk.StringVar(value="35")
+    version_var = tk.StringVar(value="Android 16 (API 36)")
     checks = {k: tk.BooleanVar(value=k in ("widescreen", "fps")) for k in IMPROVEMENTS}
+    checks.update({k: tk.BooleanVar(value=True) for k in FIXES})
     state = {"out": None}
 
     frm = ttk.Frame(root, padding=10)
@@ -285,30 +549,30 @@ def gui():
     ttk.Entry(frm, textvariable=src_var).grid(row=1, column=1, sticky="ew", padx=5)
     ttk.Button(frm, text="Elegir…", command=pick_src).grid(row=1, column=2)
 
-    sdk = ttk.LabelFrame(frm, text="SDK objetivo", padding=6)
+    sdk = ttk.LabelFrame(frm, text="Versión de Android para la que se arma", padding=6)
     sdk.grid(row=2, column=0, columnspan=3, sticky="ew", pady=6)
-    ttk.Radiobutton(sdk, text="Android 16 (API 36)", variable=target_var, value="36").pack(side="left")
-    ttk.Radiobutton(sdk, text="Mínimo instalable (API 24)", variable=target_var, value="24").pack(side="left", padx=10)
-    ttk.Radiobutton(sdk, text="No cambiar", variable=target_var, value="0").pack(side="left")
-    ttk.Radiobutton(sdk, text="Otro:", variable=target_var, value="custom").pack(side="left", padx=(10, 0))
-    ttk.Spinbox(sdk, from_=MIN_INSTALLABLE, to=99, width=4, textvariable=custom_var).pack(side="left")
+    ttk.Combobox(sdk, textvariable=version_var, values=[v for v, _ in ANDROID_VERSIONS],
+                 state="readonly", width=24).pack(side="left")
+    ttk.Label(sdk, text="  (API 24 = la que menos cambia; Android 15/16/17 no instalan menos de 24)").pack(side="left")
 
-    imp = ttk.LabelFrame(frm, text="Mejoras", padding=6)
-    imp.grid(row=3, column=0, columnspan=3, sticky="ew")
-    for k, text in IMPROVEMENTS.items():
-        ttk.Checkbutton(imp, text=text, variable=checks[k]).pack(anchor="w")
+    for row, (title, options) in enumerate((("Mejoras", IMPROVEMENTS),
+                                            ("Correcciones automáticas (para que no se cierre al subir el SDK)", FIXES)), 3):
+        box = ttk.LabelFrame(frm, text=title, padding=6)
+        box.grid(row=row, column=0, columnspan=3, sticky="ew", pady=(0, 6))
+        for k, text in options.items():
+            ttk.Checkbutton(box, text=text, variable=checks[k]).pack(anchor="w")
 
     btns = ttk.Frame(frm)
-    btns.grid(row=4, column=0, columnspan=3, pady=8, sticky="ew")
+    btns.grid(row=5, column=0, columnspan=3, pady=8, sticky="ew")
     log_box = scrolledtext.ScrolledText(frm, height=14, font=("Consolas", 9))
-    log_box.grid(row=5, column=0, columnspan=3, sticky="nsew")
-    frm.rowconfigure(5, weight=1)
+    log_box.grid(row=6, column=0, columnspan=3, sticky="nsew")
+    frm.rowconfigure(6, weight=1)
 
     def log(msg):
         root.after(0, lambda: (log_box.insert("end", msg + "\n"), log_box.see("end")))
 
     def target():
-        return int(custom_var.get()) if target_var.get() == "custom" else int(target_var.get())
+        return dict(ANDROID_VERSIONS)[version_var.get()]
 
     def task(fn):
         def worker():
@@ -331,10 +595,7 @@ def gui():
     def do_patch():
         if not src_var.get():
             raise RuntimeError("Primero decompila (o elige una carpeta decompilada)")
-        t = target()
-        if t and t < MIN_INSTALLABLE:
-            raise RuntimeError(f"Android 15/16/17 no instalan apps con targetSdk menor a {MIN_INSTALLABLE}")
-        patch(src_var.get(), t, [k for k, v in checks.items() if v.get()], log)
+        patch(src_var.get(), target(), [k for k, v in checks.items() if v.get()], log)
         log("Mejoras aplicadas. Puedes editar la carpeta a mano antes de armar.")
 
     def do_build():
@@ -376,14 +637,15 @@ def main():
     p = argparse.ArgumentParser(description="Decompila, mejora y vuelve a armar un APK.")
     p.add_argument("apk")
     p.add_argument("--target", type=int, default=36, help="targetSdkVersion (0 = no cambiar). Defecto 36")
-    for k, text in IMPROVEMENTS.items():
+    for k, text in {**IMPROVEMENTS, **FIXES}.items():
         p.add_argument("--" + k, action="store_true", help=text)
+    p.add_argument("--todo", action="store_true", help="todas las mejoras y correcciones")
     p.add_argument("--solo-decompilar", action="store_true", help="decompila y aplica mejoras, sin armar")
     a = p.parse_args()
     if a.target and a.target < MIN_INSTALLABLE:
         p.error(f"--target debe ser 0 o >= {MIN_INSTALLABLE}")
     src = decompile(a.apk, print)
-    patch(src, a.target, [k for k in IMPROVEMENTS if getattr(a, k)], print)
+    patch(src, a.target, [k for k in {**IMPROVEMENTS, **FIXES} if a.todo or getattr(a, k)], print)
     if not a.solo_decompilar:
         build(src, print)
 
