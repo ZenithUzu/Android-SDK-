@@ -20,14 +20,17 @@ armar, y las herramientas oficiales del Android SDK (`zipalign`, `apksigner`) pa
 Doble clic en **`aSDKupdate.bat`** (o `python asdkupdate.py`).
 
 1. **Elegir…** el APK.
-2. Elige la **versión de Android** para la que se arma (de Android 7 a 17) y marca las **mejoras** y
-   **correcciones**.
+2. Elige la **versión de Android** para la que se arma. Deja **Android 7.0 (API 24)** salvo que necesites
+   otra: es lo mínimo que instalan Android 15/16/17, y solo se sube si el juego tenía menos. Marca las
+   **mejoras** y **correcciones**.
 3. Pulsa **1. Decompilar**. Queda todo desempaquetado en `juego-src\` junto al APK.
-4. Pulsa **2. Aplicar mejoras**. Ahora puedes editar a mano: **Abrir carpeta**, o ábrela en Android Studio
-   (*File → Open*), y cambia `smali\`, `res\`, `assets\` o `AndroidManifest.xml`.
+4. Pulsa **2. Aplicar mejoras**. Ahora puedes editar a mano con **Abrir carpeta**: `smali\`, `res\`,
+   `assets\` o `AndroidManifest.xml`. Puedes abrir esos archivos con cualquier editor, incluido Android Studio,
+   pero Android Studio **no puede compilar ni ejecutar** esta carpeta, porque no es un proyecto de Android
+   Studio. Para armarla usa el botón 3.
 5. Pulsa **3. Armar y firmar**. Sale `juego_mod.apk`.
 6. **Instalar (adb)** con el teléfono conectado y la depuración USB activada. Antes desinstala la app
-   original: la firma es distinta.
+   original: la firma es distinta. Si falla, el programa te dice por qué.
 
 **Todo (1+2+3)** hace los tres pasos de una vez. Si ya tienes una carpeta decompilada, elígela en
 *Carpeta decompilada* y pulsa solo 3.
@@ -35,16 +38,23 @@ Doble clic en **`aSDKupdate.bat`** (o `python asdkupdate.py`).
 ## Uso por consola
 
 ```bat
-python asdkupdate.py juego.apk --target 36 --todo
+python asdkupdate.py juego.apk --todo              # API 24 (recomendado)
+python asdkupdate.py juego.apk --target 36 --todo  # Android 16
 python asdkupdate.py juego.apk --target 24 --solo-decompilar
 python asdkupdate.py --help
 ```
 
 ## Qué hace cada opción
 
-**Versión de Android** (lista desplegable): sube `targetSdkVersion` a esa versión, quita `maxSdkVersion` y, desde
-Android 12, añade `android:exported` donde hace falta. Android 15, 16 y 17 no instalan nada por debajo de
-Android 7.0 (API 24), que además es la opción que menos cambia la app.
+**Versión de Android** (lista desplegable): sube `targetSdkVersion` a esa versión si el juego tenía menos, quita
+`maxSdkVersion` y, desde Android 12, añade `android:exported` donde hace falta. También guarda `resources.arsc`
+sin comprimir, porque sin eso Android 11+ no instala apps que apuntan a API 30 o más. Android 15, 16 y 17 no
+instalan nada por debajo de Android 7.0 (API 24), que además es la opción que menos cambia el juego. Subir más
+(por ejemplo a 36) cambia cómo Android trata al juego: almacenamiento, permisos y servicios. Muchos juegos viejos
+se quedan entonces en pantalla negra.
+
+Las correcciones automáticas solo se aplican si la versión elegida las necesita. Con API 24 casi no se toca
+nada.
 
 **Mejoras**
 
@@ -82,7 +92,12 @@ Android Studio (lo crea si no existe).
   concédelos en *Ajustes → Apps → Permisos*.
 * **Librerías `.so` de 4 KB** en teléfonos con páginas de 16 KB: solo se arreglan recompilando la librería con
   NDK r28+.
-* Si aun así se cierra, mira el motivo en **Logcat** de Android Studio y prueba con **Android 7.0 (API 24)**.
+* **Pantalla negra o se cierra:** primero instala el APK **original** en ese teléfono. Si también se queda en
+  negro, el problema no es el parche: por ejemplo, el juego descarga datos de un servidor que ya no existe.
+  Si el original funciona, vuelve a armar con **Android 7.0 (API 24)** y menos mejoras. Con el teléfono
+  conectado, el botón **Ver errores del teléfono** muestra el motivo (busca `FATAL EXCEPTION`).
+* **Juegos con protección de firma** (algunos de Gameloft, juegos con anti-trampas): detectan que el APK se
+  volvió a firmar y no arrancan. Eso no lo puede arreglar un parche de manifest.
 
 ## Uso responsable
 

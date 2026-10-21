@@ -31,6 +31,9 @@ COMPONENTS = ("activity", "activity-alias", "service", "receiver")
 ANDROID_VERSIONS = [("No cambiar el SDK", 0)] + [(f"Android {n} (API {api})", api) for n, api in (
     ("17", 37), ("16", 36), ("15", 35), ("14", 34), ("13", 33), ("12L", 32), ("12", 31), ("11", 30),
     ("10", 29), ("9", 28), ("8.1", 27), ("8.0", 26), ("7.1", 25), ("7.0", 24))]
+RECOMMENDED = "Android 7.0 (API 24)"  # lo mínimo que instala Android 15/16/17; subir más cambia el comportamiento del juego
+# Cada corrección solo hace falta desde cierta API objetivo; por debajo no se toca nada
+FIX_NEEDED_FROM = {"pendingintent": 31, "receiver": 34, "fgs": 34, "fileuri": 24, "edge": 35}
 
 FIXES = {
     "pendingintent": "Notificaciones/alarmas: PendingIntent sin FLAG_IMMUTABLE (crash desde Android 12)",
@@ -263,7 +266,8 @@ def run(cmd, log):
     for line in p.stdout.splitlines():
         log("  " + line)
     if p.returncode != 0:
-        raise RuntimeError(f"{Path(cmd[0]).name} falló (código {p.returncode})")
+        last = next((l for l in reversed(p.stdout.splitlines()) if l.strip()), "")
+        raise RuntimeError(f"{Path(cmd[0]).name} falló (código {p.returncode}): {last}")
 
 
 # ------------------------------------------------------------------ pasos
@@ -275,7 +279,11 @@ def src_dir(apk):
 def decompile(apk, log):
     out = src_dir(apk)
     run([find_java(), "-jar", ensure_apktool(log), "d", "-f", "-o", str(out), str(apk)], log)
+    # original/ solo trae el manifest binario (ilegible) y la firma vieja; apktool b no lo usa
+    shutil.rmtree(out / "original", ignore_errors=True)
     log(f"Decompilado en: {out}")
+    log("  El manifest editable es AndroidManifest.xml de esa carpeta. Android Studio sirve para editar"
+        " los archivos, pero no puede compilar esta carpeta: arma con el botón 3.")
     return out
 
 
@@ -295,8 +303,15 @@ def patch(src, target, improvements, log):
     if re.search(r"(?m)^\s*maxSdkVersion:", text):
         text = re.sub(r"(?m)^\s*maxSdkVersion:.*\n", "", text)
         changes.append("quitado maxSdkVersion (bloqueaba Android nuevos)")
+    if "resources.arsc" not in text:  # Android 11+ rechaza apps con targetSdk >= 30 y resources.arsc comprimido
+        text = (re.sub(r"doNotCompress:[ \t]*(\[\])?[ \t]*\n", "doNotCompress:\n- resources.arsc\n", text)
+                if "doNotCompress:" in text else text.rstrip("\n") + "\ndoNotCompress:\n- resources.arsc\n")
     yml.write_text(text, encoding="utf-8")
     target = max(target or 0, current)
+    for fix, api in FIX_NEEDED_FROM.items():
+        if fix in improvements and target < api:
+            improvements = [i for i in improvements if i != fix]
+            changes.append(f"{fix}: no hace falta con API {target} (se necesita desde {api}), no se toca")
 
     manifest_path = src / "AndroidManifest.xml"
     tree = ET.parse(manifest_path)
@@ -508,9 +523,34 @@ def build(src, log):
     return out
 
 
+ADB_ERRORS = {
+    "UPDATE_INCOMPATIBLE": "La app original sigue instalada (otra firma). Desinstálala primero; se pierden sus datos.",
+    "VERSION_DOWNGRADE": "Hay una versión más nueva instalada. Desinstálala primero.",
+    "DEPRECATED_SDK_VERSION": "SDK demasiado bajo para este Android: elige Android 7.0 (API 24) o más.",
+    "RESOURCES_ARSC_COMPRESSED": "resources.arsc comprimido: vuelve a pulsar 2 y 3 con esta versión del programa.",
+    "INSUFFICIENT_STORAGE": "No hay espacio suficiente en el teléfono.",
+    "NO_MATCHING_ABIS": "El juego no trae librerías para el procesador de este teléfono.",
+    "no devices": "No hay teléfono conectado: activa la depuración USB y acepta el aviso en el teléfono.",
+    "unauthorized": "Acepta en el teléfono el aviso de depuración USB.",
+}
+
+
+def adb():
+    return shutil.which("adb") or str(find_build_tools().parent.parent / "platform-tools" / "adb")
+
+
 def install(apk, log):
-    adb = shutil.which("adb") or str(find_build_tools().parent.parent / "platform-tools" / "adb")
-    run([adb, "install", "-r", str(apk)], log)
+    try:
+        run([adb(), "install", "-r", str(apk)], log)
+    except RuntimeError as e:
+        hint = next((v for k, v in ADB_ERRORS.items() if k in str(e)), None)
+        raise RuntimeError(f"{e}\n\n{hint}" if hint else str(e))
+
+
+def phone_errors(log):
+    """Últimos errores del teléfono: ahí sale por qué un juego se cierra o se queda en negro."""
+    log("Errores recientes del teléfono (busca 'FATAL EXCEPTION' o el nombre del juego):")
+    run([adb(), "logcat", "-d", "-t", "300", "*:E"], log)
 
 
 # ------------------------------------------------------------------ interfaz
@@ -523,7 +563,7 @@ def gui():
     root.title("aSDKupdate")
     root.geometry("780x820")
     apk_var, src_var = tk.StringVar(), tk.StringVar()
-    version_var = tk.StringVar(value="Android 16 (API 36)")
+    version_var = tk.StringVar(value=RECOMMENDED)
     checks = {k: tk.BooleanVar(value=k in ("widescreen", "fps")) for k in IMPROVEMENTS}
     checks.update({k: tk.BooleanVar(value=True) for k in FIXES})
     state = {"out": None}
@@ -554,7 +594,8 @@ def gui():
     sdk.grid(row=2, column=0, columnspan=3, sticky="ew", pady=6)
     ttk.Combobox(sdk, textvariable=version_var, values=[v for v, _ in ANDROID_VERSIONS],
                  state="readonly", width=24).pack(side="left")
-    ttk.Label(sdk, text="  (API 24 = la que menos cambia; Android 15/16/17 no instalan menos de 24)").pack(side="left")
+    ttk.Label(sdk, text="  Recomendado: Android 7.0. Solo sube el SDK si era menor; subir más puede dejar el juego en negro.",
+              wraplength=470).pack(side="left")
 
     for row, (title, options) in enumerate((("Mejoras", IMPROVEMENTS),
                                             ("Correcciones automáticas (para que no se cierre al subir el SDK)", FIXES)), 3):
@@ -623,9 +664,13 @@ def gui():
 
     for text, fn in (("1. Decompilar", do_decompile), ("2. Aplicar mejoras", do_patch),
                      ("3. Armar y firmar", do_build), ("Todo (1+2+3)", do_all),
-                     ("Instalar (adb)", do_install)):
-        ttk.Button(btns, text=text, command=lambda f=fn: task(f)).pack(side="left", padx=2)
-    ttk.Button(btns, text="Abrir carpeta", command=open_folder).pack(side="right")
+                     ("Abrir carpeta", open_folder), ("Instalar (adb)", do_install),
+                     ("Ver errores del teléfono", lambda: phone_errors(log))):
+        i = len(btns.winfo_children())  # 4 botones por fila para que quepan en pantallas pequeñas
+        cmd = open_folder if fn is open_folder else (lambda f=fn: task(f))
+        ttk.Button(btns, text=text, command=cmd).grid(row=i // 4, column=i % 4, sticky="ew", padx=2, pady=2)
+    for c in range(4):
+        btns.columnconfigure(c, weight=1)
 
     log("Elige un APK y pulsa 1, 2 y 3 (o 'Todo'). Entre 2 y 3 puedes editar smali/res a mano.")
     log("Desinstala la app original antes de instalar la modificada (la firma cambia).")
@@ -637,7 +682,7 @@ def main():
         return gui()
     p = argparse.ArgumentParser(description="Decompila, mejora y vuelve a armar un APK.")
     p.add_argument("apk")
-    p.add_argument("--target", type=int, default=36, help="targetSdkVersion (0 = no cambiar). Defecto 36")
+    p.add_argument("--target", type=int, default=24, help="targetSdkVersion (0 = no cambiar). Defecto 24, solo sube si era menor")
     for k, text in {**IMPROVEMENTS, **FIXES}.items():
         p.add_argument("--" + k, action="store_true", help=text)
     p.add_argument("--todo", action="store_true", help="todas las mejoras y correcciones")
