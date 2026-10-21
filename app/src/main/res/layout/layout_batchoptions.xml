@@ -1,0 +1,79 @@
+<androidx.appcompat.widget.LinearLayoutCompat
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_gravity="center"
+    android:orientation="vertical"
+    android:gravity="center" >
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="?android:attr/colorControlNormal"
+        android:layout_marginVertical="10dp"
+        android:alpha="0.2" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/select_all_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|end"
+        android:layout_marginHorizontal="10dp"
+        android:orientation="horizontal"
+        android:gravity="center" >
+
+        <com.google.android.material.button.MaterialButton
+            android:layout_height="wrap_content"
+            android:layout_width="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            style="?attr/materialIconButtonFilledTonalStyle"
+            android:layout_marginHorizontal="10dp"
+            android:text="@string/select_all"
+            app:icon="@drawable/ic_select_all"
+            app:iconTint="?attr/colorPrimary"
+            android:textAlignment="textStart"
+            android:textStyle="bold|italic"
+            android:clickable="false"
+            android:textSize="17sp" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/checkbox"
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end|center"
+            android:background="@null"
+            android:clickable="false" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <include layout="@layout/layout_recyclerview" />
+
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center"
+        android:layout_marginHorizontal="15dp"
+        android:layout_marginVertical="10dp"
+        android:orientation="horizontal"
+        android:gravity="center" >
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_left"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.9" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/button_right"
+            style="@style/Widget.Material3.Button.TonalButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.appcompat.widget.LinearLayoutCompat>

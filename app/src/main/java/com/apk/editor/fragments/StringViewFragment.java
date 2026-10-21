@@ -1,0 +1,98 @@
+package com.apk.editor.fragments;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+
+import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.apk.axml.ResourceTableParser;
+import com.apk.axml.serializables.ResEntry;
+import com.apk.editor.R;
+import com.apk.editor.adapters.StringViewAdapter;
+import com.apk.editor.utils.AppSettings;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import in.sunilpaulmathew.sCommon.CommonUtils.sExecutor;
+
+/*
+ * Created by APK Explorer & Editor <apkeditor@protonmail.com> on Sept. 25, 2025
+ */
+public class StringViewFragment extends BaseFragment {
+
+    private String mBackupFilePath;
+
+    public static StringViewFragment newInstance(String backupFilePath) {
+        StringViewFragment fragment = new StringViewFragment();
+
+        Bundle args = new Bundle();
+        args.putString("backupFilePath", backupFilePath);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            mBackupFilePath = arguments.getString("backupFilePath");
+        }
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View mRootView = inflater.inflate(R.layout.layout_recyclerview, container, false);
+
+        RecyclerView mRecyclerView = mRootView.findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(requireActivity()));
+
+        new sExecutor() {
+            private List<ResEntry> data = new ArrayList<>();
+            @Override
+            public void onPreExecute() {
+            }
+
+            @Override
+            public void doInBackground() {
+                data = new ArrayList<>();
+                try (FileInputStream fis = new FileInputStream(mBackupFilePath.replace("/.aeeBackup/appData", "/resources.arsc"))) {
+                    for (ResEntry entry : new ResourceTableParser(fis).parse()) {
+                        if (entry.getName().startsWith("@string/") && entry.getValue() != null && !entry.getValue().isEmpty()) {
+                            data.add(entry);
+                        }
+                    }
+                } catch (IOException ignored) {
+                }
+            }
+
+            @Override
+            public void onPostExecute() {
+                mRecyclerView.setAdapter(new StringViewAdapter(data));
+            }
+        }.execute();
+
+        AppSettings.applyMargin(mRecyclerView, requireActivity());
+
+        onBackPressedCallback = new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                AppSettings.navigateToFragment(requireActivity(), 0);
+            }
+        };
+
+        return mRootView;
+    }
+    
+}
